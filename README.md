@@ -1,28 +1,73 @@
-# 🐳 docker & skyport images
+# 🐳 Docker Projects
 
-## Overview
+<div align="center">
 
-> I make various docker based projects in this repo and publish them to fix the problem that i faced thes are mainly focused to fix issues for arm64 devices but are fully compatible with amd64 too .
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![Bash Script](https://img.shields.io/badge/bash_script-%23121011.svg?style=for-the-badge&logo=gnu-bash&logoColor=white)
+![JSON](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
 
-## Projects
+Cross-architecture Docker solutions for game servers and Skyport integration
+</div>
 
-#  BSD [Bedrock Server Docker](https://github.com/g-flame/dockerimages-skyport/tree/main/assets/other/bedrock-server)
->> It is docker container that runs with presistance and it comes with a command line tool that makes it easy to start stop and view logs about the conatiner it works with arm64 and amd64 devices .
- **Installation**
+## 🚀 Overview
+
+This repository hosts a collection of Docker-based solutions designed to address common deployment challenges. While primarily focused on ARM64 architecture, all projects maintain full compatibility with AMD64 systems, ensuring broad usability across different platforms.
+
+## 📦 Projects
+
+### 🎮 Bedrock Server Docker (BSD)
+
+A persistent Docker container solution for Minecraft Bedrock Server with an intuitive CLI management tool.
+
+**Key Features:**
+- Cross-platform compatibility (ARM64/AMD64)
+- Persistent data storage
+- Easy-to-use command line interface
+- Server management tools
+- Automated logging system
+
+**Quick Installation:**
 ```bash
-sudo bash -c "$(curl -fsSL https://github.com/g-flame/dockerimages-skyport/raw/refs/heads/main/assets/other/bedrock-server/bsd-installer.sh)"
+sudo bash -c "$(curl -fsSL https://github.com/g-flame-oss/Docker-Projects/raw/refs/heads/main/assets/other/bedrock-server/bsd-installer.sh)"
 ```
 
-#  [Skyport Images](https://github.com/g-flame/dockerimages-skyport/tree/main/assets/skyport)
->> Docker images files for skyport panel to run various minecraft server software for java edition works on arm64 and amd64 devices .
+[📘 Learn More](https://github.com/g-flame/dockerimages-skyport/tree/main/assets/other/bedrock-server)
 
-##  Tech Stack
-![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white) ![Bash Script](https://img.shields.io/badge/bash_script-%23121011.svg?style=for-the-badge&logo=gnu-bash&logoColor=white) ![JSON](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
+### ⚡ Skyport Images
 
-##  Acknowledgements
+A collection of Docker images specifically designed for running Minecraft Java Edition servers through the Skyport panel.
 
-- **SkyportLabs**: Creators of skyport panel and daemon
-- **[g-flame](https://github.com/g-flame)**: Primary maintainer and developer (ME)
+**Features:**
+- Multiple Minecraft server software support
+- Cross-architecture compatibility
+- Optimized for Skyport panel integration
+- Pre-configured environments
 
+[🔗 View Collection](https://github.com/g-flame/dockerimages-skyport/tree/main/assets/skyport)
 
+## 🛠️ Tech Stack
+
+Our projects leverage industry-standard technologies:
+- **Docker**: Containerization and deployment
+- **Bash**: Automation and scripting
+- **JSON/JWT**: Configuration and authentication
+
+## 👥 Contributors
+
+- **[g-flame](https://github.com/g-flame)**: Project maintainer and lead developer
+- **SkyportLabs**: Original creators of Skyport panel and daemon
+
+## 📝 License
+
+This project is licensed under the [License Type] - see the [LICENSE](LICENSE) file for details.
+
+## 💡 Contributing
+
+Contributions are always welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on how to submit pull requests, report issues, and contribute to the project.
+
+---
+
+<div align="center">
+Made with ❤️ by g-flame
+</div>
 
