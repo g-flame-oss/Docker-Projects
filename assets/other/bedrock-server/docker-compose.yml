@@ -1,0 +1,28 @@
+##please be sure of what you are doing before editing !!
+
+version: '3.8'
+
+services:
+  bedrock:
+    image: itzg/minecraft-bedrock-server
+    container_name: mc-bedrock
+    environment:
+      EULA: "FALSE"
+      SERVER_NAME: "A Minecraft Server"
+      GAMEMODE: survival
+      DIFFICULTY: normal
+      LEVEL_TYPE: DEFAULT
+      ALLOW_CHEATS: "false"
+      MAX_PLAYERS: 10
+      ONLINE_MODE: "true"
+      VIEW_DISTANCE: 32
+      TICK_DISTANCE: 4
+      PLAYER_IDLE_TIMEOUT: 30
+      LEVEL_NAME: "world"
+    ports:
+      - "19132:19132/udp"
+    volumes:
+      - /etc/bsd/:/data
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
