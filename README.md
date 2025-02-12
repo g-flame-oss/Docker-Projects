@@ -54,17 +54,7 @@ Our projects leverage industry-standard technologies:
 
 ## 👥 Contributors
 
-- **[g-flame](https://github.com/g-flame)**: Project maintainer and lead developer
-- **SkyportLabs**: Original creators of Skyport panel and daemon
-
-## 📝 License
-
-This project is licensed under the [License Type] - see the [LICENSE](LICENSE) file for details.
-
-## 💡 Contributing
-
-Contributions are always welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on how to submit pull requests, report issues, and contribute to the project.
-
+![Alt](https://repobeats.axiom.co/api/embed/f965d93e7316de6fc52e7f98143fc49e4eb009bf.svg "Repobeats analytics image")
 ---
 
 <div align="center">
