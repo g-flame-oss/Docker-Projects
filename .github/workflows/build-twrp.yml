@@ -1,4 +1,4 @@
-name: "🔥 Build TWRP Recovery"
+name: "Build TWRP Recovery"
 
 on:
   push:
@@ -11,84 +11,76 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: 🛠️ Set up environment (Arch Linux chroot)
+      - name: Set up environment (Arch Linux chroot)
         run: |
           sudo apt update
           sudo apt install -y arch-install-scripts
           mkdir arch-root && sudo mkarchroot arch-root/root base-devel
 
-      - name: 🚀 Install Dependencies
+      - name: Install dependencies
         run: |
           sudo arch-chroot arch-root/root pacman -Sy --noconfirm sudo base-devel \
               git curl wget python python-pip zip unzip bc \
               flex bison cpio clang lzop libxml2 lzip perl libarchive rsync \
               android-tools ncurses openssl ccache xmlstarlet python-pyelftools
-          echo "✅ Installed all dependencies!"
 
-      - name: 🔧 Install repo (Fixes 'repo: command not found')
+      - name: Install repo
         run: |
           sudo curl -o /usr/local/bin/repo https://storage.googleapis.com/git-repo-downloads/repo
           sudo chmod +x /usr/local/bin/repo
-          echo "✅ Repo installed!"
 
-      - name: 📥 Clone TWRP Source
+      - name: Clone TWRP source
         run: |
           mkdir -p ~/twrp && cd ~/twrp
           repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git -b twrp-8.1
           repo sync --force-sync -j$(nproc)
-          echo "✅ Source code synced successfully!"
 
-      - name: 📤 Download Stock Recovery Image
+      - name: Download stock recovery image
         run: |
           wget -O ~/twrp/recovery.img https://github.com/g-flame-oss/Docker-Projects/raw/refs/heads/main/recovery.img
-          echo "✅ Downloaded stock recovery image!"
 
-      - name: 🏗️ Generate Device Tree
+      - name: Generate device tree
         run: |
           python -m venv ~/twrp/twrp-venv
           source ~/twrp/twrp-venv/bin/activate
           pip install twrpdtgen
           python -m twrpdtgen ~/twrp/recovery.img
           deactivate
-          echo "✅ Device tree generated!"
 
-      - name: 📂 Move Device Tree to TWRP Directory
+      - name: Move device tree to TWRP directory
         run: |
           mkdir -p ~/twrp/device/lenovo
           mv ~/twrp/output/lenovo/marino ~/twrp/device/lenovo/marino
-          echo "✅ Moved device tree successfully!"
 
-      - name: 🛠️ Build TWRP Recovery
+      - name: Build TWRP recovery
         run: |
           cd ~/twrp
           source build/envsetup.sh
           lunch omni_marino-eng
           mka recoveryimage
-          echo "✅ TWRP Recovery Built!"
 
-      - name: 🧹 Clean Unneeded Files
+      - name: Clean unneeded files
         run: |
           rm -rf ~/twrp/output
           rm -rf ~/twrp/twrp-venv
-          echo "✅ Cleaned up unnecessary files!"
 
-      - name: 📤 Upload Recovery Image to Releases
+      - name: Upload recovery image to releases
         uses: softprops/action-gh-release
         with:
           files: ~/twrp/out/target/product/marino/recovery.img
           tag_name: "twrp-marino-$(date +'%Y-%m-%d')"
-          body: "🔥 TWRP Recovery for Lenovo Marino built successfully! 🎉"
+          body: "TWRP Recovery for Lenovo Marino built successfully."
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 📤 Upload Device Tree to Releases
+      - name: Upload device tree to releases
         uses: softprops/action-gh-release
         with:
           files: ~/twrp/device/lenovo/marino/*
           tag_name: "device-tree-marino-$(date +'%Y-%m-%d')"
-          body: "📂 Device Tree for Lenovo Marino generated successfully!"
+          body: "Device tree for Lenovo Marino generated successfully."
           draft: false
           prerelease: false
         env:
