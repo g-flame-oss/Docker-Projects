@@ -1,4 +1,4 @@
-name: Build & Release TWRP Recovery
+name: Build TWRP for Lenovo Marino
 
 on:
   push:
@@ -9,126 +9,81 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: archlinux:latest  # Use Arch Linux as the build environment
+
     steps:
-
-      # 📌 Setup Storage & Compute Power
-      - name: Show Available Storage & CPU
+      - name: Set up environment
         run: |
-          echo "🔥 CPU Info:"
-          lscpu | grep "Model name"
-          echo "🔥 Storage Info:"
-          df -h
+          pacman -Sy --noconfirm sudo base-devel git curl wget python python-pip zip unzip bc \
+              flex bison cpio clang lzop libxml2 lzip perl libarchive rsync \
+              android-tools ncurses openssl ccache xmlstarlet python-pyelftools
+          echo "Build environment setup completed ✅"
 
-      - name: Free Up Storage if Needed
+      - name: Clone the Repository
+        uses: actions/checkout@v4
+
+      - name: Download Stock Recovery
         run: |
-          echo "🛠 Checking disk space..."
-          FREE_SPACE=$(df / | tail -1 | awk '{print $4}')
-          if [ "$FREE_SPACE" -lt 5000000 ]; then
-            echo "⚠️ Low storage, cleaning up..."
-            sudo apt-get clean
-            sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/powershell
-            df -h
+          wget -O recovery.img https://github.com/g-flame-oss/Docker-Projects/raw/refs/heads/main/recovery.img
+          ls -lh recovery.img
+
+      - name: Initialize & Sync TWRP Source (Optional)
+        run: |
+          if [[ "${{ github.event.inputs.skip_repo_sync }}" != "true" ]]; then
+            mkdir -p ~/twrp && cd ~/twrp
+            repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git -b twrp-8.1
+            repo sync --force-sync -j$(nproc)
           else
-            echo "✅ Enough storage available."
+            echo "Skipping repo sync as requested ⏩"
           fi
 
-      # 📌 Install Dependencies
-      - name: Install Required Packages
+      - name: Generate Device Tree
         run: |
-          sudo apt update
-          sudo apt install -y git curl repo python3 python3-venv python3-pip zip unzip bc build-essential \
-              gcc-multilib g++-multilib libc6-dev-i386 libncurses5 libncurses5-dev libssl-dev flex bison \
-              libelf-dev ccache automake lzop libtool-bin m4 libxml2-utils python3-pyelftools
-
-      # 📌 Setup Repo & Sync
-      - name: Initialize & Sync TWRP Source
+          python3 -m venv twrp-venv
+          source twrp-venv/bin/activate
+          pip install git+https://github.com/SebaUbuntu/TWRPDeviceTreeGenerator.git
+          python -m twrpdtgen recovery.img
+          deactivate
+          echo "Device tree generation completed ✅"
+      
+      - name: Move Device Tree
         run: |
-          mkdir -p ~/twrp && cd ~/twrp
-          repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git -b twrp-8.1
-          repo sync --force-sync --no-clone-bundle --no-tags -j$(nproc --all)
+          mkdir -p ~/twrp/device/lenovo/
+          mv output/lenovo/marino ~/twrp/device/lenovo/marino
+          ls -R ~/twrp/device/lenovo/marino
 
-      # 📌 Download Stock Recovery Image
-      - name: Download recovery.img
-        run: |
-          curl -L -o recovery.img https://github.com/g-flame-oss/Docker-Projects/raw/refs/heads/main/recovery.img
-          ls -lah recovery.img
-
-      # 📌 Extract Recovery Image & Generate Device Tree
-      - name: Extract recovery.img
-        run: |
-          git clone https://github.com/SebaUbuntu/AndroidImageKitchen.git AIK
-          cd AIK
-          chmod +x unpackimg.sh repackimg.sh cleanup.sh
-          ./unpackimg.sh --input ../recovery.img
-          cd ..
-
-      # 📌 Create Traditional Device Tree Structure
-      - name: Generate Traditional TWRP Device Tree
-        run: |
-          mkdir -p ~/twrp/device/lenovo/marino
-          cp -r AIK/split_img ~/twrp/device/lenovo/marino/split_img
-          cp -r AIK/ramdisk ~/twrp/device/lenovo/marino/ramdisk
-          
-          cat > ~/twrp/device/lenovo/marino/Android.mk <<EOF
-          LOCAL_PATH := \$(call my-dir)
-          include \$(CLEAR_VARS)
-          LOCAL_MODULE := recovery
-          LOCAL_MODULE_CLASS := RECOVERY_EXECUTABLES
-          include \$(BUILD_EXECUTABLE)
-          EOF
-
-          cat > ~/twrp/device/lenovo/marino/AndroidProducts.mk <<EOF
-          PRODUCT_MAKEFILES := \\
-              \$(LOCAL_DIR)/omni_marino.mk
-          EOF
-
-          cat > ~/twrp/device/lenovo/marino/omni_marino.mk <<EOF
-          PRODUCT_NAME := omni_marino
-          PRODUCT_DEVICE := marino
-          EOF
-
-          cat > ~/twrp/device/lenovo/marino/BoardConfig.mk <<EOF
-          TARGET_ARCH := arm64
-          BOARD_RECOVERYIMAGE_PARTITION_SIZE := $(stat -c %s recovery.img)
-          EOF
-
-      # 📌 Build TWRP Recovery
-      - name: Build TWRP Recovery Image
+      - name: Build TWRP Recovery
         run: |
           cd ~/twrp
           . build/envsetup.sh
           lunch omni_marino-eng
-          mka recoveryimage
+          mka recoveryimage -j$(nproc)
+          echo "Build completed ✅"
 
-      # 📌 Cleanup Unneeded Files
-      - name: Cleanup Build Artifacts
+      - name: Compress Recovery Image
         run: |
-          echo "🧹 Cleaning up..."
-          find ~/twrp/output -type f \( -name "*.o" -o -name "*.log" -o -name "*.tmp" -o -name ".DS_Store" \) -delete
-          rm -rf ~/twrp/.repo ~/twrp/out/target/product/marino/obj ~/twrp/out/.lock
+          mkdir -p release
+          mv ~/twrp/out/target/product/marino/recovery.img release/twrp-marino.img
+          cd release
+          zip -r twrp-marino.zip twrp-marino.img
+          ls -lh twrp-marino.zip
+          echo "Recovery image packaged ✅"
 
-      # 📌 Create Zip Archive of Device Tree & Recovery Image
-      - name: Create Archive
-        run: |
-          cd ~/twrp/out/target/product/marino
-          zip -r twrp-marino.zip recovery.img
-          mv twrp-marino.zip ~/twrp
-
-          cd ~/twrp/device/lenovo
-          zip -r device-tree-marino.zip marino
-          mv device-tree-marino.zip ~/twrp
-
-      # 📌 Upload Recovery Image & Device Tree to GitHub Release
-      - name: Upload Release
+      - name: Upload Device Tree & Recovery Image to Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ~/twrp/twrp-marino.zip
-            ~/twrp/device-tree-marino.zip
+            release/twrp-marino.zip
           tag_name: latest
-          name: "TWRP Recovery & Device Tree"
-          body: "🚀 Automatically built TWRP recovery image & traditional device tree"
-          draft: false
-          prerelease: false
+          body: |
+            🔥 **TWRP for Lenovo Marino**  
+            - Auto-built on GitHub Actions  
+            - Arch-based build system  
+            - **Recovery & device tree included!**  
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup Unnecessary Files
+        run: |
+          rm -rf ~/twrp/.repo ~/twrp/out
+          echo "Cleanup completed ✅"
